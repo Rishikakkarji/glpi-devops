@@ -21,7 +21,7 @@ jobs:
           aws-region: us-west-1
 
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region us-west-2 --name my-cluster
+        run: aws eks update-kubeconfig --region us-west-2 --name myglpi-cluster
 
       - name: Deploy to Kubernetes
         run: |
