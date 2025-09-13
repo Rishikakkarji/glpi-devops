@@ -1,43 +1,32 @@
-name: GLPI CI/CD Pipeline
+name: Deploy GLPI to EKS
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
-
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build & Push Docker Image
-      run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/glpi:latest .
-        docker push ${{ secrets.DOCKER_USERNAME }}/glpi:latest
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.EKS_REGION }}
 
     - name: Set up kubeconfig
       run: |
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+        aws eks update-kubeconfig --region ${{ secrets.EKS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-
-    - name: Deploy to Kubernetes
+    - name: Deploy GLPI to EKS
       run: |
-        kubectl apply -f k8s/mysql-pvc.yaml
-        kubectl apply -f k8s/glpi-pvc.yaml
-        kubectl apply -f k8s/mysql-deployment.yaml
-        kubectl apply -f k8s/mysql-service.yaml
-        kubectl apply -f k8s/glpi-deployment.yaml
-        kubectl apply -f k8s/glpi-service.yaml
+        kubectl apply -f k8s/
+        kubectl rollout status deployment/glpi
+
