@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:   # allows manual trigger too
 
 jobs:
   deploy:
@@ -22,6 +23,9 @@ jobs:
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region eu-north-1 --name GLPI-Cluster
+
+      - name: Authenticate with EKS
+        run: aws eks get-token --cluster-name GLPI-Cluster --region eu-north-1 > /dev/null
 
       - name: Check kubectl context
         run: kubectl config current-context
