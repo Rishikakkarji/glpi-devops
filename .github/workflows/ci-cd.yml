@@ -18,16 +18,16 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-north-1
 
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region us-east-1 --name myglpi-cluster
+        run: aws eks update-kubeconfig --region eu-north-1 --name GLPI-Cluster
 
       - name: Check kubectl context
         run: kubectl config current-context
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply --validate=false -f k8s/
+          kubectl apply -f k8s/
           kubectl rollout status deployment/glpi
 
