@@ -1,32 +1,15 @@
-name: Deploy GLPI to EKS
+- name: Configure AWS credentials
+  uses: aws-actions/configure-aws-credentials@v2
+  with:
+    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    aws-region: us-west-1
 
-on:
-  push:
-    branches: [main]
+- name: Update kubeconfig
+  run: aws eks update-kubeconfig --region us-west-2 --name my-cluster
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.EKS_REGION }}
-
-    - name: Set up kubeconfig
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
-        aws eks update-kubeconfig --region ${{ secrets.EKS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
-
-    - name: Deploy GLPI to EKS
-      run: |
-        kubectl apply -f k8s/
-        kubectl rollout status deployment/glpi
+- name: Deploy to Kubernetes
+  run: |
+    kubectl apply -f k8s/
+    kubectl rollout status deployment/glpi
 
